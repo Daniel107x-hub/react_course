@@ -1,4 +1,4 @@
-#Sintaxis de exports
+# Sintaxis de exports
 
 Se puede exportar de dos maneras, usando la palabra "default" o no usandola.
 
