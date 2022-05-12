@@ -1,0 +1,40 @@
+.new-user{
+    margin: 2rem auto;
+    padding: 5px;
+    width: 60%;
+    background-color: white;
+    display: flex;
+}
+
+.new-user form{
+    width: 100%;
+    padding: 0.5rem;
+}
+
+.new-user_controls{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.new-user_control{
+    width: 100%;
+}
+
+.new-user_control label{
+    display: block;
+    font-weight: 700;
+}
+
+.new-user_control input{
+    display: block;
+    width: 100%;
+    padding: 0px;
+    margin: 0px;
+}
+
+.new-user_actions{
+    margin-top: 0.5rem;
+    display: flex;
+    flex-direction: row;
+}
