@@ -139,8 +139,8 @@ Al haber un cambio en enteredEmail o enteredPassword:
 6.  Se establece la funcion de cleanup con el nuevo timer.  
 
 ***
-# Resumen
-## Hook sin arreglo de dependencias
+## Resumen
+### Hook sin arreglo de dependencias
 Si useEffect no solo tiene un arreglo de dependencias vacias, sino que no tiene dependencias
 ```
     useEffect(()=>{
@@ -149,7 +149,7 @@ Si useEffect no solo tiene un arreglo de dependencias vacias, sino que no tiene 
 ```
 La funcion de efecto se ejecutara siempre en despues de cada re renderizado del componente , incluida la primera vez
 
-## Hook con arreglo de dependencias vacio
+### Hook con arreglo de dependencias vacio
 ```
     useEffect(()=>{
         console.log("EFFECT");
@@ -157,7 +157,7 @@ La funcion de efecto se ejecutara siempre en despues de cada re renderizado del 
 ```
 La funcion de efecto se ejecutara despues de la primera vez que el componente es renderizado y montado por primera vez, pero no en actualizaciones posteriores (rerender cycle)
 
-##  Hook con n dependencias
+###  Hook con n dependencias
 ```
     useEffect(()=>{
         console.log("EFFECT");
@@ -165,7 +165,7 @@ La funcion de efecto se ejecutara despues de la primera vez que el componente es
 ```
 Ahora la funcion de efecto se ejecutara despues de cada ciclo de renderizado siempre que enteredEmail haya cambiado, incluyendo la primera vez que el componente es montado/renderizado
 
-##  Cleanup function
+###  Cleanup function
 ```
     useEffect(()=>{
         console.log("EFFECT");
@@ -177,8 +177,34 @@ Ahora la funcion de efecto se ejecutara despues de cada ciclo de renderizado sie
 ```
 La funcion retornada sera ejecutada al finalizar cada ciclo de renderizado posterior, siempre que enteredEmail haya cambiado y antes de ejecutar la funcion de efecto, sin incluir la primera vez que se ejecuta la funcion de efecto, asi como cuando el componente es desmontado (Removido de la UI)
 
+###  Efecto que depende de propiedades anidadas
+```
+const {isValid: emailIsValid} = emailState;
+  const {isValid: passwordIsValid} = passwordState;
+
+  /*
+  En este caso usamos un side effect para simplificar el codigo, la que la misma logica se encontraba repetida cuando se modificaba la contrasenia o el usuario.
+  En este efecto, hemos agregado esas variables como dependencias, entonces este codigo sera ejecutado cuando la contrasenia o el usuario sean modificados
+  */
+  useEffect(()=>{
+    const identifier = setTimeout(()=>{
+      console.log("Checking validity");
+      setFormIsValid(
+        emailState.isValid && passwordState.isValid
+      );
+    }, 1500)
+
+    return ()=>{
+      console.log("CLEANUP");
+      clearTimeout(identifier);
+    }
+  },[emailIsValid, passwordIsValid])
+```
+El ejemplo que se muestra, es una forma en la cual nosotros podemos agregar ciertas propiedades del estado como dependencia, en lugar de utilizar todo el estado. Esto hara que el efecto no se ejecute con cada actualizacion del estado independientemenete de la propiedad, sino que solo cuando ciertas propiedades se actualicen, el efecto sera ejecutado.
+
 ---
 ## useReducer hook
+
 Use reducer es otro hook incluido en la libreria de react que ayuda en el manejo de estado mas complejo que el manejado por useState; por ejemplo, multiples estados, multiples maneras de modificarlos o dependencias en otros estados.  
 En estos casos, useState se vuelve muy complicado y es mas suceptible a errores, asi como puede llevar a la escritura de codigo ineficiente o con bugs. En estos casos, **useReducer** 
 puede ser utilizado como un reemplazo de ***useState*** si se necesita un manejo del estado mas potente.
@@ -217,4 +243,203 @@ const[state, dispatchFn] = useReducer(reducerFn, initialState, initFn)
 **initialState**: Estado inicial  
 **initFn**: Funcion para setear el estado inicial de manera programatica en caso de que el estado inicial sea muy complicado
 
-## Ejemplo de uso, simplificar multiples estados asociados en un solo manejador de estado
+### Ejemplo de uso, simplificar multiples estados asociados en un solo manejador de estado
+
+Primero, definimos nuestra funcion dispatcher que se encargara de manejar las distintas acciones que disparen nuestro actualizador de estado
+```
+const emailReducer = (lastState, action) =>{ //Fuera del componente porque no interactuara con nada dentro del componente
+  if(action.type === 'USER_INPUT'){
+    return {
+      value: action.value,
+      isValid: action.value.includes('@')
+    }
+  }else if(action.type === 'INPUT_BLUR'){
+    return {
+      value: lastState.value, //Access to the last state value //Podemos usar operadores spread o rest ...
+      isValid: lastState.value.includes('@')
+    }
+  }
+
+  return {
+    value: '',
+    isValid: false
+  };
+};
+```
+Dado que este reducer no interactuara con nada dentro del componente salvo con aquello que se pase por parametros, podemos ponerlo fuera de nuestro componente.
+
+Luego, en nuestro componente, definimos nuestro manejador de estado usando el hook useReducer, e inicializamos el estado.
+```
+const [emailState, dispatchEmail] = useReducer(emailReducer, {value: '', isValid: null});
+```
+
+Y llamamos a nuestro dispatcher cuando necesitamos que haya una actualizacion de estado:
+```
+const emailChangeHandler = (event) => {
+  // setEnteredEmail(event.target.value);
+  dispatchEmail({
+    type:'USER_INPUT',
+    value: event.target.value
+  })
+
+  setFormIsValid(
+    emailState.isValid && passwordState.value.length > 6
+);
+
+const validateEmailHandler = () => {
+    // setEmailIsValid(emailState.isValid);
+    dispatchEmail({
+      type: 'INPUT_BLUR'
+    })
+  };
+```
+
+Finalmente, utilizamos el estado donde se deba mostrar
+```
+<label htmlFor="email">E-Mail</label>
+<input
+  type="email"
+  id="email"
+  value={emailState.value}
+  onChange={emailChangeHandler}
+  onBlur={validateEmailHandler}
+/>
+```
+
+# Comparacion de manejadores de estado
+
+| useState()  | useReducer()  |
+|---  |---  |
+| Principal manejador de estado | Se necesita mayor **potencia**  |
+| Funciona bien con piezas independientes de estado/datos | Debe de ser considerado si se trabaja con piezas de estado o datos relacionadas |
+| Genial si las actualizaciones de estado son sencillas y limitadas a pocos tipos de actualizaciones  | Manejar actualizaciones de estado complejas |
+||Usar useState() se vuelve complejo/incomodo, o se tienen muchos bugs o comportamientos indeseados|
+
+***
+
+# React Context
+
+React context es una herramienta cuyo objetivo final es acortar la cadena de comunicacion entre componentes.
+Supongamos que tenemos la siguiente estructura para una aplicacion de comercio:
+```
+---------App----------
+|         |           |
+|         |           |
+|         |           |
+Auth     Shop      Cart
+|         |
+|         |
+|         |
+Login   Products
+          |
+          |
+          |
+        Product
+```
+Si quisieramos pasar algun evento o informacion de un producto hacia el carrito de compras, tendrimaos que elevar el estado hasta app y enviarlo a cart para poder agregar un producto. Esto implicaria tambien que el estado y aputnadores a ciertas funciones tendrian que pasar por los componentes intermedios, los cuales no utilizarian dichos recursos mas que para redirigirlos.
+
+El contexto nos permite resolver este problema, permitiendonos comunicar con componentes no directamente conectados y sin construir esa larga cadena de props.  
+
+Pasos para utilizar el contexto:  
+1.  Crear el contexto usando React.createContext() y definir el estado que abarca la aplicacion
+    ```
+    import React from "react";
+    const AuthContext = React.createContext({ //Este objeto no es un componente, pero si contiene un componente
+        isLoggedIn: false
+    }); //Default context, contexto a traves de toda la aplicacion
+
+    export default AuthContext;
+    ```  
+
+2.  Definir que componentes tendran acceso al contexto **"envolviendolos"** en  el proveedor de contexto (Los componentes envueltos asi como todos sus componentes hijos tendran acceso al contexto):  
+    ```
+    <AuthContext.Provider 
+      value={{ //Este objeto no es un componente, pero si contiene un componente. Se agrega el value para poder modificarlo y no solo leerlo
+        isLoggedIn: isLoggedIn
+      }}
+    >
+        <MainHeader isAuthenticated={isLoggedIn} onLogout={logoutHandler} />
+        <main>
+          {!isLoggedIn && <Login onLogin={loginHandler} />}
+          {isLoggedIn && <Home onLogout={logoutHandler} />}
+        </main>
+      </AuthContext.Provider>
+    ```
+    AuthContext no es un componente, pero el Provider si lo es, por lo tanto podemos envolver los componentes en ese componente.  
+
+3.  **"Escuchar"** al contexto, procesando asi los cambios que sucedan en el en los distintos componentes que se requiera. Esto se puede hacer a traves de **Consumer** o de un hook.  
+
+    a.  Utilizando al consumer, es necesario envolver nuestro codigo JSX que tendra acceso al contexto en el componente AuthContext.Consumer, el cual toma como unico argumento una    funcion que recibe el contexto, y retorna el codigo JSX con acceso al contexto    
+    ```
+        const Navigation = (props) => {
+          return (
+            <AuthContext.Consumer>
+              {
+                (context) => {
+                  return(
+                    <nav className={classes.nav}>
+                      <ul>
+                        {context.isLoggedIn && (
+                          <li>
+                            <a href="/">Users</a>
+                          </li>
+                        )}
+                        {context.isLoggedIn && (
+                          <li>
+                            <a href="/">Admin</a>
+                          </li>
+                        )}
+                        {context.isLoggedIn && (
+                          <li>
+                            <button onClick={props.onLogout}>Logout</button>
+                          </li>
+                        )}
+                      </ul>
+                    </nav>
+                  )
+                }
+              }
+            </AuthContext.Consumer>
+          );
+        };
+    ```   
+
+
+    b.  Utilizando el **useContext()** hook, para lo cual solo es necesario pasar el contexto al hook.
+    ```
+    import React, {useContext} from 'react';
+    import AuthContext from '../../context/auth-context';
+
+    import classes from './Navigation.module.css';
+
+    const Navigation = (props) => {
+
+      const context = useContext(AuthContext);
+
+      return (
+        <nav className={classes.nav}>
+          <ul>
+            {context.isLoggedIn && (
+              <li>
+                <a href="/">Users</a>
+              </li>
+            )}
+            {context.isLoggedIn && (
+              <li>
+                <a href="/">Admin</a>
+              </li>
+            )}
+            {context.isLoggedIn && (
+              <li>
+                <button onClick={props.onLogout}>Logout</button>
+              </li>
+            )}
+          </ul>
+        </nav>
+      );
+    };
+
+    export default Navigation;
+    ```
+
+

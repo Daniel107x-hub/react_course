@@ -9,7 +9,7 @@ const person = {
 
 const newPerson = {
     ...person,
-    title: 'Sr'
+    title: 'Sr',
 }
 
 console.log(newPerson);
