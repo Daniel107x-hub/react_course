@@ -355,7 +355,8 @@ Pasos para utilizar el contexto:
     ```
     <AuthContext.Provider 
       value={{ //Este objeto no es un componente, pero si contiene un componente. Se agrega el value para poder modificarlo y no solo leerlo
-        isLoggedIn: isLoggedIn
+        isLoggedIn: isLoggedIn,
+        onLogout: () => {} // Se agrega aqui para mejorar el autocompletado de codigo
       }}
     >
         <MainHeader isAuthenticated={isLoggedIn} onLogout={logoutHandler} />
@@ -440,6 +441,160 @@ Pasos para utilizar el contexto:
     };
 
     export default Navigation;
-    ```
+    ```   
+
+Tambien es posible pasar funciones a traves del contexto y no solo propiedades:
+```
+//App.js
+return (
+    <AuthContext.Provider 
+      value={{ //Este objeto no es un componente, pero si contiene un componente
+        isLoggedIn: isLoggedIn,
+        onLogout: logoutHandler
+      }}
+    >
+      <MainHeader onLogout={logoutHandler} />
+      <main>
+        {!isLoggedIn && <Login onLogin={loginHandler} />}
+        {isLoggedIn && <Home onLogout={logoutHandler} />}
+      </main>
+    </AuthContext.Provider>
+  );
+}
+
+//Nav bar
+<button onClick={context.onLogout}>Logout</button>
+```
+
+O manejar un contexto mas complejo, con estado y otras propiedades que seran usadas en toda la aplicacion
+
+```
+export const AuthContextProvider = (props) =>{
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+    useEffect(()=>{
+        const storedUserLoggedIn = localStorage.getItem("isLoggedIn");
+        if(storedUserLoggedIn === '1'){
+          setIsLoggedIn(true);
+        }
+      },[])
+
+    const logoutHandler = () =>{
+        localStorage.removeItem("isLoggedIn");
+        setIsLoggedIn(false);
+    }
+
+    const loginHandler = () =>{
+        localStorage.setItem("isLoggedIn", '1');
+        setIsLoggedIn(true);
+    }
+
+    return (
+        <AuthContext.Provider
+            value={{
+                isLoggedIn: isLoggedIn,
+                onLogout: logoutHandler,
+                onLogin: loginHandler
+            }}
+        >
+            {props.children}
+        </AuthContext.Provider>
+    )
+}
+
+export default AuthContext;
+```
+
+### Limitaciones del hook de contexto   
+
+1. useContext no esta optimizado para cambios de alta frecuencia -> Redux
+2. No debe de ser usado para reemplazar por completo a los props -> Los componentes deben ser configurados por props, y solo se deberia de reemplazar por useContext para acortar las cadenas de propiedades   
+
+Full working example in Login.js
 
 
+# Reglas de los hooks   
+1. Solo utilizar hooks en funciones de React (Componentes, custom hooks)   
+2. Solo llamar a los hooks en el nivel mas alto del componente (No en funciones anidadas)   
+3. Agregar todo a lo que se haga referencia en useEffect como una dependencia, a menos que sean parte de la API de JS
+
+###   
+
+# useImperativeHandle & forwardRefs   
+El hook **useImperativeHandle** permite que utilicemos refs de los componentes hijos a los componentes padres y asi accedamos a metodos o propiedades de los hijos a traves de refs.
+Supongamos que queremos acceder a un metodo de algun componente desde su componente padre y activarlo desde el padre como en este ejemplo:
+
+```
+//Componente padre
+const emailInputRef = useRef();
+const passwordInputRef = useRef();
+const submitHandler = (event) => {
+  event.preventDefault();
+  if(formIsValid){
+    context.onLogin(emailState.value, passwordState.value);
+  }else if(!emailIsValid){
+    emailInputRef.current.focus(); //Llamando al metodo exportado desde el hijo
+  }else{
+    passwordInputRef.current.focus()
+  }
+};
+
+<Input
+  ref={emailInputRef} //Pasando referencia correspondiente al hijo
+  inputState={emailState}
+  type="email"
+  id="email"
+  inputChangeHandler={emailChangeHandler}
+  validateInputHandler={validateEmailHandler}
+>E-mail</Input>
+
+<Input
+  ref={passwordInputRef}
+  inputState={passwordState}
+  type="password"
+  id="password"
+  inputChangeHandler={passwordChangeHandler}
+  validateInputHandler={validatePasswordHandler}
+>Password</Input>
+```
+
+```
+//Componente hijo
+import React,{useRef, useImperativeHandle} from 'react';
+
+import classes from './Input.module.css';
+
+const Input = React.forwardRef((props, ref) =>{ //forwardRef permite el paso de referencias entre componentes padre<->hijo
+    const inputRef = useRef(); //Ref al elemento html input
+
+    const activate = () =>{
+        inputRef.current.focus(); //Metodo focus nativo del elemento html JS API
+    }
+
+    useImperativeHandle(ref,()=>{
+        return{
+            focus: activate //Solo es posible acceder a los metodos expuestos en este return del hook, focus es como se llamara el metodo en el padre y activate es el metodo acvtual en el hijo
+        }
+    });
+
+    return(
+        <div
+          className={`${classes.control} ${
+            props.inputState.isValid === false ? classes.invalid : ''
+          }`}
+        >
+          <label htmlFor={props.id}>{props.children}</label>
+          <input
+            ref={inputRef}
+            type={props.type}
+            id={props.id}
+            value={props.inputState.value}
+            onChange={props.inputChangeHandler}
+            onBlur={props.validateInputHandler}
+          />
+        </div>
+    )
+})
+
+export default Input;
+```

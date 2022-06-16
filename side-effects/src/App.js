@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useContext} from 'react';
 
 import Login from './components/Login/Login';
 import Home from './components/Home/Home';
@@ -6,7 +6,7 @@ import MainHeader from './components/MainHeader/MainHeader';
 import AuthContext from './context/auth-context';
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  // const [isLoggedIn, setIsLoggedIn] = useState(false);
   
   /*
   Insertar esto aqui presenta un problema.
@@ -26,6 +26,8 @@ function App() {
   -Al inicio de la aplicacion, el componente se evaluara y se ejecutara la funcioon de efecto al final porque antes del inciio podemos decir que no habia dependencias
   -Como estamos actualizando el estado, el componente se volvera a evaluar pero el efecto ya no se ejecutara, porque las dependencias no cambiaron desde el ciclo anterior
   */
+
+  /* Logica movida al custom AuthContextProvider
   useEffect(()=>{
     const storedUserLoggedIn = localStorage.getItem("isLoggedIn");
     if(storedUserLoggedIn === '1'){
@@ -44,19 +46,17 @@ function App() {
     localStorage.removeItem("isLoggedIn");
     setIsLoggedIn(false);
   };
+  */
+  const context = useContext(AuthContext);
 
   return (
-    <AuthContext.Provider 
-      value={{ //Este objeto no es un componente, pero si contiene un componente
-        isLoggedIn: isLoggedIn
-      }}
-    >
-      <MainHeader onLogout={logoutHandler} />
+    <React.Fragment>
+      <MainHeader onLogout={context.logoutHandler} />
       <main>
-        {!isLoggedIn && <Login onLogin={loginHandler} />}
-        {isLoggedIn && <Home onLogout={logoutHandler} />}
+        {!context.isLoggedIn && <Login />}
+        {context.isLoggedIn && <Home />}
       </main>
-    </AuthContext.Provider>
+    </React.Fragment>
   );
 }
 

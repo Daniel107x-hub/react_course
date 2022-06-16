@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useReducer } from 'react';
+import React, { useState, useEffect, useReducer, useContext, useRef } from 'react';
 
 import Card from '../UI/Card/Card';
 import classes from './Login.module.css';
 import Button from '../UI/Button/Button';
+import AuthContext from '../../context/auth-context';
+import Input from '../UI/Input/Input';
 
 const emailReducer = (lastState, action) =>{ //Fuera del componente porque no interactuara con nada dentro del componente
   if(action.type === 'USER_INPUT'){
@@ -41,7 +43,7 @@ const passwordReducer = (lastState, action) => {
   }
 }
 
-const Login = (props) => {
+const Login = () => {
   // const [enteredEmail, setEnteredEmail] = useState('');
   // const [emailIsValid, setEmailIsValid] = useState();
   // const [enteredPassword, setEnteredPassword] = useState('');
@@ -54,6 +56,8 @@ const Login = (props) => {
   const {isValid: emailIsValid} = emailState;
   const {isValid: passwordIsValid} = passwordState;
 
+  const context = useContext(AuthContext);
+
   /*
   En este caso usamos un side effect para simplificar el codigo, la que la misma logica se encontraba repetida cuando se modificaba la contrasenia o el usuario.
   En este efecto, hemos agregado esas variables como dependencias, entonces este codigo sera ejecutado cuando la contrasenia o el usuario sean modificados
@@ -64,7 +68,7 @@ const Login = (props) => {
       setFormIsValid(
         emailState.isValid && passwordState.isValid
       );
-    }, 1500)
+    }, 500)
 
     return ()=>{
       console.log("CLEANUP");
@@ -115,15 +119,23 @@ const Login = (props) => {
     })
   };
 
+  const emailInputRef = useRef();
+  const passwordInputRef = useRef();
   const submitHandler = (event) => {
     event.preventDefault();
-    props.onLogin(emailState.value, passwordState.value);
+    if(formIsValid){
+      context.onLogin(emailState.value, passwordState.value);
+    }else if(!emailIsValid){
+      emailInputRef.current.focus();
+    }else{
+      passwordInputRef.current.focus()
+    }
   };
 
   return (
     <Card className={classes.login}>
       <form onSubmit={submitHandler}>
-        <div
+        {/* <div
           className={`${classes.control} ${
             emailState.isValid === false ? classes.invalid : ''
           }`}
@@ -136,8 +148,16 @@ const Login = (props) => {
             onChange={emailChangeHandler}
             onBlur={validateEmailHandler}
           />
-        </div>
-        <div
+        </div> */}
+        <Input
+          ref={emailInputRef}
+          inputState={emailState}
+          type="email"
+          id="email"
+          inputChangeHandler={emailChangeHandler}
+          validateInputHandler={validateEmailHandler}
+        >E-mail</Input>
+        {/* <div
           className={`${classes.control} ${
             passwordState.isValid === false ? classes.invalid : ''
           }`}
@@ -150,9 +170,17 @@ const Login = (props) => {
             onChange={passwordChangeHandler}
             onBlur={validatePasswordHandler}
           />
-        </div>
+        </div> */}
+        <Input
+          ref={passwordInputRef}
+          inputState={passwordState}
+          type="password"
+          id="password"
+          inputChangeHandler={passwordChangeHandler}
+          validateInputHandler={validatePasswordHandler}
+        >Password</Input>
         <div className={classes.actions}>
-          <Button type="submit" className={classes.btn} disabled={!formIsValid}>
+          <Button type="submit" className={classes.btn}>
             Login
           </Button>
         </div>
