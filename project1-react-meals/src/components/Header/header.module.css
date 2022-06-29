@@ -1,0 +1,18 @@
+.header_container{
+    background-color: #DA9617;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.title{
+    font-size: x-large;
+    font-weight: 600;
+    color: white;
+}
+
+.cart_container{
+    background-color: black;
+    width: 20%;
+    margin-right: 10px;
+}
