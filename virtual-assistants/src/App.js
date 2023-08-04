@@ -15,7 +15,7 @@ function App() {
               <ProfileCard
                 title="Alexa"
                 handle="@alexa99"
-                image={AlexaImage}
+                image={AlexaImage}w
                 description="Alexa was created by Amazon and helps you buy things"
               ></ProfileCard>
             </div>

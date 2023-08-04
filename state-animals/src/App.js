@@ -1,13 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 
 function App() {
-  const handleclick = () => {
-    console.log("Button was clicked");
+  const [animals, setAnimals] = useState(0);
+  const handleClick = () => {
+    setAnimals((prev) => (prev += 1));
   };
 
   return (
     <div>
-      <button onClick={handleclick}>Add animal</button>
+      <button onClick={handleClick}>Add animal</button>
+      <p>Animals: {animals}</p>
     </div>
   );
 }
