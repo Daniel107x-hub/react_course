@@ -1,9 +1,12 @@
-import React from 'react'
+import React from "react";
 
-function ImageShow() {
+function ImageShow({ image }) {
+  console.log(image);
   return (
-    <div>ImageShow</div>
-  )
+    <div>
+      <img src={image.urls.small} alt={image.alt_description} />
+    </div>
+  );
 }
 
-export default ImageShow
+export default ImageShow;
