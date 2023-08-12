@@ -1,24 +1,25 @@
 import React, {useState} from 'react'
-import './BookCreate.css';
 
-function BookCreate() {
+function BookCreate({onCreate}) {
     const [title, setTitle] = useState("");
     const handleTitleChange = (e) => {
         const value = e.target.value;
         setTitle(value);
     }
-    const handleFormSubmit = () => {
-        console.log("Creating book: " + title);
+    const handleFormSubmit = (e) => {
+        e.preventDefault();
+        onCreate(title);
+        setTitle('');
     }
     return (
-        <section className="book-create">
-            <h1 className='title'>Add a book</h1>
+        <div className="book-create">
+            <h3 className='title'>Add a book</h3>
             <form action="" onSubmit={handleFormSubmit}>
                 <label htmlFor="">Title</label>
-                <input type="text" name="" id="" value={title} onChange={handleTitleChange}/>
-                <button type='submit'>Create!</button>
+                <input type="text" name="" id="" value={title} onChange={handleTitleChange} className='input'/>
+                <button type='submit' className='button'>Create!</button>
             </form>
-        </section>
+        </div>
     )
 }
 
