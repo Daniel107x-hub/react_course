@@ -1,40 +1,31 @@
 import React from "react";
-import Button from "./Button";
-import { GoBellFill, GoCloud, GoDatabase } from "react-icons/go";
+import Accordion from "./components/Accordion";
+
+const items = [
+  {
+    id: 1,
+    label: "Label 1",
+    content:
+      "Lorem ipsum, dolor sit amet consectetur adipisicing elit. Ipsa, quas!",
+  },
+  {
+    id: 2,
+    label: "Label 2",
+    content:
+      "Lorem ipsum, dolor sit amet consectetur adipisicing elit. Ipsa, quas 2!",
+  },
+  {
+    id: 3,
+    label: "Label 3",
+    content:
+      "Lorem ipsum, dolor sit amet consectetur adipisicing elit. Ipsa, quas 3!",
+  },
+];
 
 function App() {
-  const handleClick = () => {
-    console.log("Button clicked");
-  };
   return (
     <div>
-      <div>
-        <Button primary onClick={handleClick} className="mb-1">
-          <GoBellFill />
-          Click me
-        </Button>
-      </div>
-      <div>
-        <Button secondary>
-          <GoCloud />
-          Buy now!
-        </Button>
-      </div>
-      <div>
-        <Button success>
-          <GoDatabase />
-          See deal!
-        </Button>
-      </div>
-      <div>
-        <Button warning>Hide ads!</Button>
-      </div>
-      <div>
-        <Button danger>Something</Button>
-      </div>
-      <div>
-        <Button plain>Danger zone</Button>
-      </div>
+      <Accordion items={items} />
     </div>
   );
 }
