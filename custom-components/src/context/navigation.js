@@ -25,7 +25,6 @@ function NavigationProvider({ children }) {
         currentPath, // Current value of path
       }}
     >
-      {currentPath}
       {children}
     </NavigationContext.Provider>
   );
