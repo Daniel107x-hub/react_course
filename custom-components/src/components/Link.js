@@ -1,0 +1,18 @@
+import React, { useContext } from "react";
+import NavigationContext from "../context/navigation";
+
+function Link({ to, children }) {
+  const { navigate } = useContext(NavigationContext);
+
+  const handleClick = (e) => {
+    e.preventDefault(); //Stop default link functionality
+    navigate(to);
+  };
+  return (
+    <a href="" onClick={handleClick}>
+      {children}
+    </a>
+  );
+}
+
+export default Link;
