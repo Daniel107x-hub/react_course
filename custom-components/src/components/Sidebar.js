@@ -6,6 +6,7 @@ function Sidebar() {
         {label: "Dropdown", path: "/"},
         {label: "Accordion", path: "/accordion"},
         {label: "Buttons", path: "/buttons"},
+        {label: "Modal", path: "/modal"},
     ];
 
     const renderedLinks = links.map(link => <Link to={link.path} key={link.label} className={'mb-3'} activeClassName={'font-bold border-l-2 border-blue-500 pl-2'}>{link.label}</Link>);
