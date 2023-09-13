@@ -1,25 +1,26 @@
 import React from "react";
 
-function Table({ data }) {
-  const renderedRows = data.map((item) => {
+function Table({ data, config, keyFnc }) {
+  // We use a nested map to iterate each config for each item in the table
+  const renderedRows = data.map((rowData) => {
+    const renderedCols = config.map((config) => (
+      <td className="p-3">{config.render(rowData)}</td> // Will render each column based on the render function
+    ));
     return (
-      <tr className="border-b" key={item.name}>
-        <td className="p-3">{item.name}</td>
-        <td className="p-3">
-          <div className={`p-3 m-2 ${item.color}`}></div>
-        </td>
-        <td className="p-3">{item.score}</td>
+      <tr className="border-b" key={keyFnc(rowData)}>
+        {renderedCols}
       </tr>
     );
   });
+
+  const renderedHeaders = config.map((column) => (
+    <th key={column.label}>{column.label}</th>
+  ));
+
   return (
     <table className="table-auto border-spacing-2">
       <thead>
-        <tr className="border-b-2">
-          <th>Fruit</th>
-          <th>Color</th>
-          <th>Score</th>
-        </tr>
+        <tr className="border-b-2">{renderedHeaders}</tr>
       </thead>
       <tbody>{renderedRows}</tbody>
     </table>
